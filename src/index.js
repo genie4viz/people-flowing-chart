@@ -3,7 +3,7 @@ import d3 from 'd3';
 import echarts from 'echarts';
 import 'echarts-gl';
 import SimplexNoise from './simplex';
-// import tracks from './csv/total_tracks.csv';
+import tracks from './csv/tracks.csv';
 // import printMe from './print.js';
 
 function component() {
@@ -13,109 +13,231 @@ function component() {
   element.style.width = "1200px";
   element.style.height = "600px";  
   
-  drawWind(element);
+  drawFlow(element);
   
   // drawGraph(element);
   return element;
 }
 
-function drawWind (el) {
-  var myChart = echarts.init(el);
-  var noise = new SimplexNoise(Math.random);
-  var noise2 = new SimplexNoise(Math.random);
-  function generateData() {
-      var data = [];
-      for (var i = 0; i < 50; i++) {
-          for (var j = 0; j < 50; j++) {
-              var dx = noise.noise2D(i / 30, j / 30);
-              var dy = noise2.noise2D(i / 30, j / 30);
-              var mag = Math.sqrt(dx * dx + dy * dy);
-              valMax = Math.max(valMax, mag);
-              valMin = Math.min(valMin, mag);
-              data.push([i, j, dx, dy]);
-          }
-      }
-      return data;
-  }
-
-  var valMin = Infinity;
-  var valMax = -Infinity;
-  var data = generateData();
+function formatData (data) {
+  data.shift();
+  data.forEach((d, i) => {      
+      d[3] = +d[3];
+      d[4] = +d[4];
+  })
   
-  myChart.setOption({
-      visualMap: {
-          show: false,
-          min: valMin,
-          max: valMax,
-          dimension: 2,
-          inRange: {
-              color: ['#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#ffffbf', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026']
+  return data;
+}
+
+function drawFlow (el) {
+  var myChart = echarts.init(el);  
+  
+  const targetCoord = [1000, 140]
+  const curveness = 0.2
+  const linesData = []
+  const categories = [
+    {
+      name: '流入中',
+      itemStyle: {
+          normal: {
+              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [{
+                  offset: 0,
+                  color: '#01acca'
+              }, {
+                  offset: 1,
+                  color: '#5adbe7'
+              }]),
           }
       },
-      xAxis: {
-          type: 'value',
-          axisLine: {
-              lineStyle: {
-                  color: '#ff0000'
+      label: {
+          normal: {
+              fontSize: '14'
+          }
+      },
+    }, {
+      name: '暂无流入',
+      itemStyle: {
+          normal: {
+              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [{
+                  offset: 0,
+                  color: '#ffb402'
+              }, {
+                  offset: 1,
+                  color: '#ffdc84'
+              }]),
+          }
+      },
+      label: {
+          normal: {
+              fontSize: '14'
+          }
+      },
+  }];
+  
+  const item = {
+      name: "数据中心",
+      value: targetCoord,
+      symbolSize: 100,
+      itemStyle: {
+          normal: {
+              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [{
+                  offset: 0,
+                  color: '#157eff'
+              }, {
+                  offset: 1,
+                  color: '#35c2ff'
+              }]),
+          }
+      },
+      label: {
+          normal: {
+              fontSize: '14'
+          }
+      },
+  };
+  
+  const items = [{
+      name: "子平台1",
+      category: 0,
+      active: true,
+      speed: '50kb/s',
+      value: [0, 0]
+  }, {
+      name: "子平台2",
+      category: 0,
+      active: true,
+      speed: '50kb/s',
+      value: [0, 100]
+  }, {
+      name: "子平台3",
+      category: 1,
+      value: [0, 200]
+  }, {
+      name: "子平台4",
+      category: 1,
+      value: [0, 300]
+  }]
+  
+  const data = items.concat([item])
+  
+  items.forEach(function(el) {
+      if (el.active) {
+          linesData.push([{
+              coord: el.value
+          }, {
+              coord: targetCoord
+          }])
+      }
+  })
+  
+  const links = items.map((el) => {
+      return {
+          source: el.name,
+          target: item.name,
+          speed: el.speed,
+          lineStyle: {
+              normal: {
+                  color: el.speed ? '#12b5d0' : '#ff0000',
+                  curveness: curveness,
               }
           },
-          splitLine: {
-              show: false,
-              lineStyle: {
-                  color: 'rgba(255,255,255,0.9)'
-              }
-          }
+      }
+  })
+  
+  var option = {
+      legend: [{
+          formatter: function(name) {
+              return echarts.format.truncateText(name, 100, '14px Microsoft Yahei', '…');
+          },
+          tooltip: {
+              show: true
+          },
+          textStyle: {
+              color: '#999'
+          },
+          selectedMode: false,
+          right: 0,
+          data: categories.map(function(el) {
+              return el.name
+          })
+      }],
+      xAxis: {
+          show: false,
+          type: 'value'
       },
       yAxis: {
-          type: 'value',
-          axisLine: {
-              lineStyle: {
-                  color: '#ff0000'
-              }
-          },
-          splitLine: {
-              show: false,
-              lineStyle: {
-                  color: 'rgba(255,255,0,0.9)'
-              }
-          }
+          show: false,
+          type: 'value'
       },
       series: [{
-          type: 'flowGL',
-          data: data,
-          particleDensity: 64,
-          particleSize: 5,
+          type: 'graph',
+          layout: 'none',
+          coordinateSystem: 'cartesian2d',
+          symbolSize: 60,
+          z: 3,
+          edgeLabel: {
+              normal: {
+                  show: true,
+                  textStyle: {
+                      fontSize: 14
+                  },
+                  formatter: function(params) {
+                      let txt = ''
+                      if (params.data.speed !== undefined) {
+                          txt = params.data.speed
+                      }
+                      return txt
+                  },
+              }
+          },
+          label: {
+              normal: {
+                  show: true,
+                  position: 'bottom',
+                  color: '#5e5e5e'
+              }
+          },
           itemStyle: {
-              opacity: 0.5
-          }
-      }, 
-      // {
-      //     type: 'custom',
-      //     data: data,
-      //     encode: {
-      //         x: 0,
-      //         y: 0
-      //     },
-      //     renderItem: function (params, api) {
-      //         var x = api.value(0), y = api.value(1), dx = api.value(2), dy = api.value(3);
-      //         var start = api.coord([x - dx / 2, y - dy / 2]);
-      //         var end = api.coord([x + dx / 2, y + dy / 2]);
-      //         return {
-      //             type: 'line',
-      //             shape: {
-      //                 x1: start[0], y1: start[1],
-      //                 x2: end[0], y2: end[1]
-      //             },
-      //             style: {
-      //                 lineWidth: 2,
-      //                 stroke:'#fff',
-      //                 opacity: 0.2
-      //             }
-      //         }
-      //     }
-      // }
-    ]
-  });
+              normal: {
+                  shadowColor: 'none'
+              },
+              emphasis: {
+  
+              }
+          },
+          lineStyle: {
+              normal: {
+                  width: 2,
+                  shadowColor: 'none'
+              },
+          },
+          edgeSymbol: ['none', 'arrow'],
+          edgeSymbolSize: 8,
+          data: data,
+          links: links,
+          categories: categories
+      }, {
+          name: 'A',
+          type: 'lines',
+          coordinateSystem: 'cartesian2d',
+          z: 1,
+          effect: {
+              show: true,
+              smooth: false,
+              trailLength: 0,
+              symbol: "arrow",
+              color: 'rgba(55,155,255,0.5)',
+              symbolSize: 12
+          },
+          lineStyle: {
+              normal: {
+                  curveness: curveness
+              }
+          },
+          data: linesData
+      }]
+  }
+  myChart.setOption(option)
 }
 
 function drawGraph (element) {

@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import d3 from 'd3';
 import printMe from './print.js';
 
 function component() {

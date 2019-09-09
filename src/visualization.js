@@ -2,7 +2,7 @@ import echarts from 'echarts';
 import { getRandomInt } from './util';
 
 export function drawFlow(el, graph) {
-    
+    console.log(graph)
     var myChart = echarts.init(el);
     var seriesBase = [{
       type: 'graph',
@@ -27,14 +27,14 @@ export function drawFlow(el, graph) {
                 period: getRandomInt(3, 10),
                 delay: getRandomInt(1, 10),
                 symbol: "arrow",
-                trailLength: 0.3,
+                trailLength: 0.8,
                 color: '#888', //transparent
                 symbolSize: 3,
                 loop: true
           },
           lineStyle: {
             width: 0,
-            curveness: 0.3
+            curveness: 0
           },
           data: [
             [
@@ -50,8 +50,12 @@ export function drawFlow(el, graph) {
     }
     
     var option = {
-      xAxis: { type: 'value' },
-      yAxis: { type: 'value' },
+        xAxis: { 
+            type: 'value'
+        },
+        yAxis: {
+            type: 'value'
+        },
       series: [...seriesBase, ...series]
     };  
     

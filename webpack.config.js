@@ -6,7 +6,9 @@ module.exports = {
   mode: 'development',
   entry: {
     app: './src/index.js',
-    // print: './src/print.js'
+    events: './src/events.js',
+    util: './src/util.js',
+    visualization: './src/visualization.js',
   },
   devtool: 'inline-source-map',
   devServer: {

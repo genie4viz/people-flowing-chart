@@ -68,12 +68,12 @@ export function getCellData(data) {
 
     var limit = getLimits(data);
     var cellInfo = [],
-        rectCount = 5,//rect counts of x, y coords
-        stepX = limit.x/rectCount, stepY = limit.y/rectCount;
+        rectCountX = 6, rectCountY = 4,//rect counts of x, y coords
+        stepX = limit.x/rectCountX, stepY = limit.y/rectCountY;
   
     var cell = {}, rect;
-    for(var i = 0; i < rectCount; i++){
-      for(var j = 0; j < rectCount; j++){
+    for(var i = 0; i < rectCountX; i++){
+      for(var j = 0; j < rectCountY; j++){
         rect = {
           x: i * stepX, 
           y: j * stepY, 
@@ -105,7 +105,7 @@ export function getCellData(data) {
             });
             
             for(var i in counts){
-                if(counts[i] > 1){
+                if(counts[i] > 2){
                     spt = i.split(":");
                     var fil = cell.data.filter(d => spt[0] === d[0] && spt[1] === d[2]);
 

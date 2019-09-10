@@ -49,17 +49,23 @@ export function getLimits (data){
     }
 }
 
-export function getPartialData(data, period = 0) {//period unit is minute
-    var partial = [];
+export function getPartialData(data, period) {//period unit is minute
+    var partials = [], partial;
 
-    if(period === 0) { //all data
-        partial = data;
-    }else{
-        var from = +data[0][1], to = +data[data.length - 1][1];        
-        partial = data.filter(d => +d[1] >= from && +d[1] <= from + period * 60 * 1000);              
+    var baseFrom = +data[0][1], 
+        baseTo = +data[data.length - 1][1],
+        periodMS = period * 60 * 1000,
+        times = Math.round((baseTo - baseFrom) / periodMS),
+        currentFrom, currentTo;
+    console.log(baseTo - baseFrom, times)
+    for(var i = 0; i < times; i++){
+        currentFrom = baseFrom + i * periodMS;
+        currentTo = currentFrom + periodMS;
+        partial = data.filter(d => +d[1] >= currentFrom && +d[1] < currentTo);        
+        partials.push(getCellData(partial));
     }
     return {
-        data: getCellData(partial),
+        data: partials,
         limit: getLimits(data)
     }
 }
@@ -105,17 +111,17 @@ export function getCellData(data) {
             });
             
             for(var i in counts){
-                if(counts[i] > 2){
+                if(counts[i] > 20){
                     spt = i.split(":");
                     var fil = cell.data.filter(d => spt[0] === d[0] && spt[1] === d[2]);
 
                     var sx = +fil[0][3],
-                        sy = +fil[0][4],
+                        sy = +fil[0][4],                        
                         ex = +fil[fil.length - 1][3],
                         ey = +fil[fil.length - 1][4];
                     
                     counts_arr.push({
-                        key: i,
+                        key: i,                        
                         from: [sx, sy],
                         to: [ex, ey]
                     });

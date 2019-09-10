@@ -1,34 +1,39 @@
 import _ from 'lodash';
 import * as d3 from 'd3';
 
-import {period60Min, periodTotal, uploadFile} from './events.js';
-
-const period = 10;
+import {onStart, uploadFile} from './events.js';
 
 function addFileComponent() {
   const file_el = document.createElement('input');
   file_el.setAttribute('type', 'file');
-  file_el.setAttribute('id', 'track_file');
+  file_el.setAttribute('id', 'track_file');  
   file_el.onchange = uploadFile;
   return file_el;
 }
 //timeline buttons
-function addPeriodButtonComponent() {
-  const buttonWrapper = document.createElement('div');
-  buttonWrapper.setAttribute('id', 'buttonWrapper');
-  buttonWrapper.style.visibility = 'hidden';
+function addPeriodComponent() {
+
+  const periodWrapper = document.createElement('div');
+  periodWrapper.setAttribute('id', 'periodWrapper');
+  periodWrapper.style.visibility = 'hidden';
+
+  const editPeriod = document.createElement('input');
+  editPeriod.setAttribute("id", "period_txt");
+  editPeriod.setAttribute("value", 20);
+  editPeriod.style.width = "60px";  
   
   const button_60mins = document.createElement('BUTTON');
-  button_60mins.innerHTML = "60 Mins";
-  button_60mins.onclick = period60Min;
+  button_60mins.innerHTML = "Start(mins)";
+  button_60mins.onclick = onStart;
 
-  const button_total = document.createElement('BUTTON');
-  button_total.innerHTML = "Total Mins";
-  button_total.onclick = periodTotal;
+  // const button_total = document.createElement('BUTTON');
+  // button_total.innerHTML = "Total Mins";
+  // button_total.onclick = periodTotal;
 
-  buttonWrapper.appendChild(button_60mins);
-  buttonWrapper.appendChild(button_total);
-  return buttonWrapper;
+  periodWrapper.appendChild(editPeriod);
+  periodWrapper.appendChild(button_60mins);
+  // periodWrapper.appendChild(button_total);
+  return periodWrapper;
 }
 
 function addFlowChartComponent() {  
@@ -57,6 +62,6 @@ function addSliderComponent() {
 
 
 document.body.appendChild(addFileComponent());
-document.body.appendChild(addPeriodButtonComponent());
+document.body.appendChild(addPeriodComponent());
 document.body.appendChild(addFlowChartComponent());
 document.body.appendChild(addSliderComponent());
